@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FizzBuzz (1〜50)</title>
+  <title>カスタム FizzBuzz</title>
   <style>
     :root {
       --bg-color: #f8fafc;
@@ -12,6 +12,12 @@
       --text-muted: #64748b;
       --border-color: #e2e8f0;
       --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --secondary: #e2e8f0;
+      --secondary-hover: #cbd5e1;
+      --error-bg: #fee2e2;
+      --error-border: #fca5a5;
+      --error-text: #b91c1c;
 
       --fizz-color: #2563eb;
       --fizz-bg: #dbeafe;
@@ -63,6 +69,109 @@
       font-size: 0.95rem;
     }
 
+    /* フォーム領域 */
+    .form-card {
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 480px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.95rem;
+      background-color: #ffffff;
+      color: var(--text-color);
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 0.55rem 1.25rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.15s ease, transform 0.05s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background-color: var(--secondary);
+      color: #334155;
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--secondary-hover);
+    }
+
+    /* エラーアラート */
+    .error-alert {
+      display: none;
+      background-color: var(--error-bg);
+      border: 1px solid var(--error-border);
+      color: var(--error-text);
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 1.25rem;
+      font-size: 0.9rem;
+    }
+
+    /* サマリーバー */
     .summary-bar {
       display: flex;
       justify-content: center;
@@ -86,10 +195,13 @@
       font-weight: 600;
     }
 
+    /* テーブル */
     .table-wrapper {
       overflow-x: auto;
       border: 1px solid var(--border-color);
       border-radius: 8px;
+      max-height: 520px;
+      position: relative;
     }
 
     table {
@@ -103,6 +215,7 @@
       background-color: #f1f5f9;
       position: sticky;
       top: 0;
+      z-index: 10;
     }
 
     th {
@@ -133,12 +246,12 @@
     }
 
     .col-result {
-      width: 50%;
+      width: 45%;
       font-weight: 600;
     }
 
     .col-badge {
-      width: 30%;
+      width: 35%;
       text-align: center;
     }
 
@@ -187,14 +300,45 @@
 <body>
   <div class="container">
     <header>
-      <h1>FizzBuzz (1 〜 50)</h1>
-      <p class="description">1から50までの数値を判定した結果の一覧表です。</p>
+      <h1 id="page-title">FizzBuzz カスタマイズ</h1>
+      <p class="description">範囲や割る数を指定して、結果をテーブル形式で再計算できます。</p>
     </header>
 
+    <!-- 設定入力フォーム -->
+    <div class="form-card">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="start-num">開始数値</label>
+          <input type="number" id="start-num" class="form-control" value="1" step="1">
+        </div>
+        <div class="form-group">
+          <label for="end-num">終了数値</label>
+          <input type="number" id="end-num" class="form-control" value="50" step="1">
+        </div>
+        <div class="form-group">
+          <label for="fizz-divisor">Fizz の割る数</label>
+          <input type="number" id="fizz-divisor" class="form-control" value="3" min="1" step="1">
+        </div>
+        <div class="form-group">
+          <label for="buzz-divisor">Buzz の割る数</label>
+          <input type="number" id="buzz-divisor" class="form-control" value="5" min="1" step="1">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" id="btn-reset" class="btn btn-secondary">初期値に戻す</button>
+        <button type="button" id="btn-calculate" class="btn btn-primary">再計算する</button>
+      </div>
+    </div>
+
+    <!-- エラーメッセージ表示領域 -->
+    <div id="error-alert" class="error-alert" role="alert"></div>
+
+    <!-- 集計サマリーバー -->
     <div class="summary-bar" id="summary-bar">
       <!-- 集計結果がJSで挿入されます -->
     </div>
 
+    <!-- 結果テーブル -->
     <div class="table-wrapper">
       <table>
         <thead>
@@ -213,83 +357,177 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const tbody = document.getElementById("fizzbuzz-table-body");
-      const summaryBar = document.getElementById("summary-bar");
-      const fragment = document.createDocumentFragment();
-
-      const counts = {
-        total: 50,
-        fizz: 0,
-        buzz: 0,
-        fizzbuzz: 0,
-        normal: 0
+      const DEFAULTS = {
+        start: 1,
+        end: 50,
+        fizz: 3,
+        buzz: 5
       };
 
-      for (let i = 1; i <= 50; i++) {
-        let text = "";
-        let badgeText = "";
-        let badgeClass = "";
-        let textClass = "";
+      const startInput = document.getElementById("start-num");
+      const endInput = document.getElementById("end-num");
+      const fizzInput = document.getElementById("fizz-divisor");
+      const buzzInput = document.getElementById("buzz-divisor");
+      const btnCalculate = document.getElementById("btn-calculate");
+      const btnReset = document.getElementById("btn-reset");
+      const errorAlert = document.getElementById("error-alert");
+      const tbody = document.getElementById("fizzbuzz-table-body");
+      const summaryBar = document.getElementById("summary-bar");
 
-        if (i % 15 === 0) {
-          text = "FizzBuzz";
-          badgeText = "FizzBuzz (15の倍数)";
-          badgeClass = "badge-fizzbuzz";
-          textClass = "text-fizzbuzz";
-          counts.fizzbuzz++;
-        } else if (i % 3 === 0) {
-          text = "Fizz";
-          badgeText = "Fizz (3の倍数)";
-          badgeClass = "badge-fizz";
-          textClass = "text-fizz";
-          counts.fizz++;
-        } else if (i % 5 === 0) {
-          text = "Buzz";
-          badgeText = "Buzz (5の倍数)";
-          badgeClass = "badge-buzz";
-          textClass = "text-buzz";
-          counts.buzz++;
-        } else {
-          text = String(i);
-          badgeText = "通常";
-          badgeClass = "badge-normal";
-          counts.normal++;
-        }
-
-        const tr = document.createElement("tr");
-
-        const tdNum = document.createElement("td");
-        tdNum.className = "col-num";
-        tdNum.textContent = i;
-
-        const tdResult = document.createElement("td");
-        tdResult.className = `col-result ${textClass}`;
-        tdResult.textContent = text;
-
-        const tdBadge = document.createElement("td");
-        tdBadge.className = "col-badge";
-        const badge = document.createElement("span");
-        badge.className = `badge ${badgeClass}`;
-        badge.textContent = badgeText;
-        tdBadge.appendChild(badge);
-
-        tr.appendChild(tdNum);
-        tr.appendChild(tdResult);
-        tr.appendChild(tdBadge);
-
-        fragment.appendChild(tr);
+      function showError(message) {
+        errorAlert.textContent = message;
+        errorAlert.style.display = "block";
       }
 
-      tbody.appendChild(fragment);
+      function hideError() {
+        errorAlert.textContent = "";
+        errorAlert.style.display = "none";
+      }
 
-      // サマリーバーの描画
-      summaryBar.innerHTML = `
-        <div class="summary-item">全件: <span class="summary-count">${counts.total}</span></div>
-        <div class="summary-item">Fizz: <span class="summary-count text-fizz">${counts.fizz}</span></div>
-        <div class="summary-item">Buzz: <span class="summary-count text-buzz">${counts.buzz}</span></div>
-        <div class="summary-item">FizzBuzz: <span class="summary-count text-fizzbuzz">${counts.fizzbuzz}</span></div>
-        <div class="summary-item">通常: <span class="summary-count">${counts.normal}</span></div>
-      `;
+      function calculateAndRender() {
+        hideError();
+
+        // 値のパース
+        const startVal = startInput.value.trim();
+        const endVal = endInput.value.trim();
+        const fizzVal = fizzInput.value.trim();
+        const buzzVal = buzzInput.value.trim();
+
+        if (startVal === "" || endVal === "" || fizzVal === "" || buzzVal === "") {
+          showError("すべての項目に数値を入力してください。");
+          return;
+        }
+
+        const start = Number(startVal);
+        const end = Number(endVal);
+        const fizz = Number(fizzVal);
+        const buzz = Number(buzzVal);
+
+        // 整数チェック
+        if (!Number.isInteger(start) || !Number.isInteger(end) || !Number.isInteger(fizz) || !Number.isInteger(buzz)) {
+          showError("すべての項目には整数を入力してください。");
+          return;
+        }
+
+        // 割る数のチェック
+        if (fizz < 1 || buzz < 1) {
+          showError("Fizz・Buzzの割る数には 1 以上の整数を指定してください。");
+          return;
+        }
+
+        // 開始 <= 終了 チェック
+        if (start > end) {
+          showError("開始数値は終了数値以下にしてください。");
+          return;
+        }
+
+        // 件数制限チェック（最大1000件）
+        const count = end - start + 1;
+        if (count > 1000) {
+          showError(`対象件数が ${count.toLocaleString()} 件です。一度に計算できるのは最大 1,000 件までです。`);
+          return;
+        }
+
+        // 計算と描画
+        renderTable(start, end, fizz, buzz);
+      }
+
+      function renderTable(start, end, fizz, buzz) {
+        tbody.innerHTML = "";
+        const fragment = document.createDocumentFragment();
+
+        const counts = {
+          total: end - start + 1,
+          fizz: 0,
+          buzz: 0,
+          fizzbuzz: 0,
+          normal: 0
+        };
+
+        for (let i = start; i <= end; i++) {
+          let text = "";
+          let badgeText = "";
+          let badgeClass = "";
+          let textClass = "";
+
+          const isFizz = (i % fizz === 0);
+          const isBuzz = (i % buzz === 0);
+
+          if (isFizz && isBuzz) {
+            text = "FizzBuzz";
+            badgeText = `FizzBuzz (${fizz} & ${buzz}の倍数)`;
+            badgeClass = "badge-fizzbuzz";
+            textClass = "text-fizzbuzz";
+            counts.fizzbuzz++;
+          } else if (isFizz) {
+            text = "Fizz";
+            badgeText = `Fizz (${fizz}の倍数)`;
+            badgeClass = "badge-fizz";
+            textClass = "text-fizz";
+            counts.fizz++;
+          } else if (isBuzz) {
+            text = "Buzz";
+            badgeText = `Buzz (${buzz}の倍数)`;
+            badgeClass = "badge-buzz";
+            textClass = "text-buzz";
+            counts.buzz++;
+          } else {
+            text = String(i);
+            badgeText = "通常";
+            badgeClass = "badge-normal";
+            counts.normal++;
+          }
+
+          const tr = document.createElement("tr");
+
+          const tdNum = document.createElement("td");
+          tdNum.className = "col-num";
+          tdNum.textContent = i;
+
+          const tdResult = document.createElement("td");
+          tdResult.className = `col-result ${textClass}`;
+          tdResult.textContent = text;
+
+          const tdBadge = document.createElement("td");
+          tdBadge.className = "col-badge";
+          const badge = document.createElement("span");
+          badge.className = `badge ${badgeClass}`;
+          badge.textContent = badgeText;
+          tdBadge.appendChild(badge);
+
+          tr.appendChild(tdNum);
+          tr.appendChild(tdResult);
+          tr.appendChild(tdBadge);
+
+          fragment.appendChild(tr);
+        }
+
+        tbody.appendChild(fragment);
+
+        // サマリーバーの更新
+        summaryBar.innerHTML = `
+          <div class="summary-item">全件: <span class="summary-count">${counts.total}</span></div>
+          <div class="summary-item">Fizz: <span class="summary-count text-fizz">${counts.fizz}</span></div>
+          <div class="summary-item">Buzz: <span class="summary-count text-buzz">${counts.buzz}</span></div>
+          <div class="summary-item">FizzBuzz: <span class="summary-count text-fizzbuzz">${counts.fizzbuzz}</span></div>
+          <div class="summary-item">通常: <span class="summary-count">${counts.normal}</span></div>
+        `;
+      }
+
+      function resetDefaults() {
+        startInput.value = DEFAULTS.start;
+        endInput.value = DEFAULTS.end;
+        fizzInput.value = DEFAULTS.fizz;
+        buzzInput.value = DEFAULTS.buzz;
+        calculateAndRender();
+      }
+
+      // イベントリスナー
+      btnCalculate.addEventListener("click", calculateAndRender);
+      btnReset.addEventListener("click", resetDefaults);
+
+      // 初回実行
+      calculateAndRender();
     });
   </script>
 </body>
